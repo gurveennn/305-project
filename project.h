@@ -30,113 +30,7 @@ struct Instruction {
 
 
 };
-/*struct ComparePriority {
-    bool operator()(const ElementQueueNode* a, const ElementQueueNode* b) const {
-        // Returns true if 'a' has LOWER priority than 'b' (for a Max-Heap)
-        return a->patient_priority < b->patient_priority;
-    }
-};*/
-// Definition of a Queue Node in the Event Queue
-struct InstructionEventQueueNode {
-    //double event_time; // event start time
-    int instruction_type;   // Event type. 1: Arrival; 2: Start Service; 3: Departure
-    //ElementQueueNode* qnode;  // pointer to corresponding element in the Element Queue
-    //truct EventQueueNode *next;  // pointer to next event
-	
-};
 
-// Class including all elements in the simulation 
-/*class ElementQueue {
-	public:
-		ElementQueue(int seed, double lambda, double mu_e, double mu_t, double mu_c) {
-			current = 0; // current element is the first element in the element array
-			InitializeQueue(seed, lambda, mu_e, mu_t, mu_c);  // create nodes in the queue based on arrival and service distributions
-		};
-		~ElementQueue() {
-        };
-		ElementQueueNode* GetCurrentElement() {
-			return &ElementArray[current];
-		};
-		ElementQueueNode* GetElementAtIndex(uint64_t index) {
-			if (index < size)
-				return &ElementArray[index];
-			else	
-				return nullptr;
-		};
-
-		ElementQueueNode* AdvanceToNextElement() {
-			if (current < (size - 1)) {
-				current++;
-				return &ElementArray[current];
-			} 
-			else {
-				return nullptr; 
-			}
-		};
-	private:
-		void InitializeQueue(int seed, double lambda, double mu_e, double mu_t, double mu_c);
-		uint64_t size;  // total size of element queue
-		uint64_t current; // Point to the current node being processed for arrival event
-		std::vector<ElementQueueNode> ElementArray;  // Array containing all elements, created at the beginning of simulation
-	};
-*/
-// Event Queue for events that have been scheduled, implemented as a priority queue
-/*class EventQueue {
-	public:
-		EventQueue() {
-			head = nullptr;
-			tail = nullptr; 
-			num_events = 0;
-		};
-		~EventQueue() {
-            while (head != nullptr) {
-                EventQueueNode* tmp = head;
-                head = head->next;  
-                delete(tmp); 
-            }
-		}; 
-		EventQueueNode* CreateEvent(double etime, int etype, ElementQueueNode* qnode) {
-			EventQueueNode* node = new(EventQueueNode); 
-  			node->event_time = etime;
-  			node->event_type = etype;
-  			node->qnode = qnode;
-			node->next = nullptr;
-			return node;
-		};
-		void ScheduleEvent(double etime, int etype, ElementQueueNode* qnode);
-		EventQueueNode* GetNextEvent();
-		EventQueueNode* GetHeadEvent();
-		bool IsEmpty() {
-			return (num_events == 0);
-		};
-		// Remove an event from memory, allow for removal of head of queue
-		void RemoveEvent(EventQueueNode* node) {
-			if (node == head) {
-				head = head->next;
-				if (head == nullptr) {
-					tail = nullptr;
-				}
-				delete node;
-				return;
-			}
-			else {
-				delete node;
-			}
-		};
-		void PrintEventQueue() {   // Use this for debugging purposes
-			EventQueueNode* node;
-  			printf("EventQ = ");
-  			for (node = head; node; node = node->next)
-    			printf("(%f,%d) ", node->event_time, node->event_type);
-  			printf("\n");
-		};
-
-	private:
-	    EventQueueNode* head;
-    	EventQueueNode* tail;
-		uint64_t num_events; 
-};
-*/
 class Simulation {
 	public:
 		Simulation(std::string trace_file_name_in, double start_inst_in, double inst_count_in, double D_in) {
@@ -158,7 +52,7 @@ class Simulation {
 			
 			//P = new EventQueue();
 			//C = new EventQueue();
-
+			halt_instruction_fetch = false;
 			num_integer_instructions = 0;
 	 		num_float_instructions = 0;
 			num_branch_instructions = 0;
@@ -166,6 +60,7 @@ class Simulation {
 			num_store_instructions = 0;
 			num_EX_stages_remaining = 0;
 			num_MEM_stages_remaining= 0;
+			num_retired_instructions = 0;
 			all_EX_cycles_completed = false;
 			all_MEM_cycles_completed = false;
 			cycle_clock = 0;
@@ -233,9 +128,10 @@ class Simulation {
 		double num_store_instructions;
 	    bool all_EX_cycles_completed;
 		bool all_MEM_cycles_completed;
+		bool halt_instruction_fetch;
 		int num_EX_stages_remaining;
 		int	num_MEM_stages_remaining;
-
+		int num_retired_instructions;
 		//ElementQueue* ElementQ;     // Element Queue for all elements used in simulation
 		//EventQueue* E;              // Event Queue for patients arriving to emergency dept and waiting for evaluation	
 		///EventQueue* P;              // Event Queue to model treatment process
