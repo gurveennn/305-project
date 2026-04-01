@@ -27,7 +27,9 @@ struct Instruction {
 	std::vector<std::string> dependencies;
 	int num_MEM_stages_remaining;
 	int num_EX_stages_remaining;
-
+	bool ex_done;
+	bool mem_done;
+	long long seq_num;
 
 };
 
@@ -39,12 +41,12 @@ class Simulation {
             inst_count = inst_count_in;
             D = D_in;
 
-			std::queue<Instruction*> traced_instructions;
-			std::vector<Instruction*> IF_stage;
-			std::vector<Instruction*> ID_stage;
-			std::vector<Instruction*> EX_stage;
-			std::vector<Instruction*> MEM_stage;
-			std::vector<Instruction*> WB_stage;
+			// std::queue<Instruction*> traced_instructions;
+			// std::vector<Instruction*> IF_stage;
+			// std::vector<Instruction*> ID_stage;
+			// std::vector<Instruction*> EX_stage;
+			// std::vector<Instruction*> MEM_stage;
+			// std::vector<Instruction*> WB_stage;
 
 
 			//ElementQ = new ElementQueue(seed, lambda, mu_e, mu_t, mu_c);
@@ -80,7 +82,10 @@ class Simulation {
 		};
 
 		void ReadTrace(std::string filename);
+		
 		bool ValidateStructuralHazards(std::vector<Instruction*> cur_stage);
+		bool CheckDataHazard(Instruction* current_inst);
+		Instruction* LatestPC(Instruction* current_inst, const std::string& dependencies_pc);
 		void InstructionFetch(int num_to_fetch);
 		void InstructionDecodeAndReadOperands();
 		void InstructionIssueAndExecute(bool all_cycles_completed);
@@ -132,6 +137,7 @@ class Simulation {
 		int num_EX_stages_remaining;
 		int	num_MEM_stages_remaining;
 		int num_retired_instructions;
+		long long next_seq_num;
 		//ElementQueue* ElementQ;     // Element Queue for all elements used in simulation
 		//EventQueue* E;              // Event Queue for patients arriving to emergency dept and waiting for evaluation	
 		///EventQueue* P;              // Event Queue to model treatment process
@@ -143,7 +149,7 @@ class Simulation {
 		std::vector<Instruction*> EX_stage;
 		std::vector<Instruction*> MEM_stage;
 		std::vector<Instruction*> WB_stage;		
-
+		std::vector<Instruction*> retired_instructions;;	
 
 		double simulated_stats[5];  // Store simulated statistics
 		double cycle_clock;        // current time during simulation

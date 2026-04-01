@@ -53,7 +53,9 @@ void Simulation::ReadTrace(std::string filename){
                 inst->instruction_pc = pc;
 
                 inst->dependencies = pc_dependencies;
-               
+                inst->ex_done =false;
+                inst->mem_done=false;
+                inst->seq_num=next_seq_num++;
 
                 if (D == 2 || D == 4) {
                         inst->num_EX_stages_remaining = 2;
@@ -97,6 +99,102 @@ bool Simulation::ValidateStructuralHazards(std::vector<Instruction*> cur_stage) 
         return true;
 }
 
+Instruction* Simulation::LatestPC(Instruction* current_inst, const std::string& dependencies_pc){
+        Instruction* latest = nullptr; 
+        for (Instruction* inst : IF_stage){
+                if(inst==nullptr){
+                        continue;
+                }
+                else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
+                        if (latest==nullptr || inst->seq_num>latest->seq_num){
+                                latest=inst;
+                        }
+
+                }
+        }
+        for (Instruction* inst : ID_stage){
+                if(inst==nullptr){
+                        continue;
+                }
+                else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
+                        if (latest==nullptr || inst->seq_num>latest->seq_num){
+                                latest=inst;
+                        }
+
+                }
+        }
+        for (Instruction* inst : EX_stage){
+                if(inst==nullptr){
+                        continue;
+                }
+                else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
+                        if (latest==nullptr || inst->seq_num>latest->seq_num){
+                                latest=inst;
+                        }
+
+                }
+        }
+        for (Instruction* inst : MEM_stage){
+                if(inst==nullptr){
+                        continue;
+                }
+                else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
+                        if (latest==nullptr || inst->seq_num>latest->seq_num){
+                                latest=inst;
+                        }
+
+                }
+        }
+        for (Instruction* inst : WB_stage){
+                if(inst==nullptr){
+                        continue;
+                }
+                else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
+                        if (latest==nullptr || inst->seq_num>latest->seq_num){
+                                latest=inst;
+                        }
+
+                }
+        }
+        for (Instruction* inst : retired_instructions){
+                if(inst==nullptr){
+                        continue;
+                }
+                else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
+                        if (latest==nullptr || inst->seq_num>latest->seq_num){
+                                latest=inst;
+                        }
+
+                }
+        }
+        return latest;
+}
+
+bool Simulation::CheckDataHazard(Instruction* current_inst){
+        for (const std::string& dependencies_pc: current_inst->dependencies){
+                Instruction* latest = LatestPC(current_inst,dependencies_pc);
+                if(latest==nullptr){
+                        continue;
+                }
+
+                if(latest->instruction_type == 1 || latest->instruction_type == 2){
+                        if (!latest->ex_done){
+                                return false;
+                        }
+
+                }
+                if(latest->instruction_type == 4 || latest->instruction_type == 5){
+                        if (!latest->mem_done){
+                                return false;
+                        }
+
+                }
+
+        }
+        
+        return true;  
+}
+
 void Simulation::InstructionFetch(int num_to_fetch) {
     // Retrieve 2 instructions from the queue where they are stored, they are currently in IF stage
       while (IF_stage.size() < 2 && !instructions_queue.empty()) {
@@ -122,6 +220,10 @@ void Simulation::InstructionDecodeAndReadOperands(){
     }
                 for (int i = 0; i < count; i++) {
                 Instruction* cur_instruction = ID_stage[i];
+                if(!CheckDataHazard(cur_instruction)){
+                        count=i;
+                        break;
+                }
                 if (cur_instruction->instruction_type == 3) {
                         halt_instruction_fetch = true;
                 }
@@ -132,6 +234,7 @@ void Simulation::InstructionDecodeAndReadOperands(){
         //printf("size of ID after erase %ld\n", ID_stage.size());
 
 }     
+
 void Simulation::InstructionIssueAndExecute(bool all_cycles_completed){
            if (EX_stage.empty()){
 
