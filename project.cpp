@@ -16,10 +16,11 @@
 #include"project.h"
 
 
+// Function for consuming the trace, and creating Instruction objects containing the Instruction program counter (PC), 
+// instruction type and a list of PC values for instructions that the current instruction depends on.
 void Simulation::ReadTrace(std::string filename){
     std::ifstream file(filename);
-
-    file.seekg(std::ios::beg); // Start from the beginning of the file
+    file.seekg(std::ios::beg);
 
     // Skip all lines(instructions) until start_inst
     for (int i = 0; i < start_inst - 1; ++i) {
@@ -30,13 +31,14 @@ void Simulation::ReadTrace(std::string filename){
 
     // String to store each line of the file.
     std::string line;
+
+    // Track current line to ensure only inst_count instructions were read
     double current_line_num = start_inst;
     double target_line = start_inst + inst_count;
 
 
     if (file.is_open()) {
         while (current_line_num < target_line && getline(file, line)){
-                //std::cout << line <<std::endl;
                 current_line_num += 1;
                 std::stringstream ss(line);
                 std::string token;
@@ -44,37 +46,33 @@ void Simulation::ReadTrace(std::string filename){
                 std::string pc = token;
                 getline(ss, token, ',');
                 int type = stoi(token);
+                // TODO check if we need this section 
                 std::vector<std::string> pc_dependencies;
                 while (getline(ss, token, ',')) {
                         pc_dependencies.push_back(token);
                 }
+
+
+                // Create a new instance of Instruction struct
                 Instruction* inst = new Instruction;
                 inst->instruction_type = type;
                 inst->instruction_pc = pc;
 
                 inst->dependencies = pc_dependencies;
                
-
+                // Initialize the number of execution/memory cycles the instruction will need to complete 
+                // based on the depth configuration
+                inst->num_EX_stages_remaining = 1;
+                inst->num_MEM_stages_remaining = 1;
                 if (D == 2 || D == 4) {
                         inst->num_EX_stages_remaining = 2;
-                }
-                else {
-                        inst->num_EX_stages_remaining = 1;
-                        inst->num_MEM_stages_remaining = 1;
                 }
                
                 if (D == 3 || D == 4) {
                         inst->num_MEM_stages_remaining = 3;
                 }
-                else {
-                        inst->num_EX_stages_remaining = 1;
-                        inst->num_MEM_stages_remaining = 1;
-                }
-                
-
-
+                // Push instruction into instruction queue
                 instructions_queue.push(inst);
-
         }
         file.close();
     }
@@ -85,6 +83,7 @@ void Simulation::ReadTrace(std::string filename){
 
 }
 
+// This function is used to check if another instruction in the same cycle is using the same functional unit
 bool Simulation::ValidateStructuralHazards(std::vector<Instruction*> cur_stage) {
         if (cur_stage.size() < 2) {
                 return true;
@@ -125,9 +124,7 @@ void Simulation::InstructionDecodeAndReadOperands(){
                 }
        
         ID_stage.erase(ID_stage.begin(), ID_stage.begin() + count);
-
-}    
-
+}
 
 void Simulation::InstructionIssueAndExecute(){
            if (EX_stage.empty()){
