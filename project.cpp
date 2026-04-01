@@ -16,6 +16,7 @@
 #include"project.h"
 
 
+
 void Simulation::ReadTrace(std::string filename){
     std::ifstream file(filename);
 
@@ -260,14 +261,6 @@ void Simulation::RunSimulation(){
         ReadTrace(trace_file_name);
         printf("size queue %ld\n", instructions_queue.size());
         while(num_retired_instructions < inst_count) {
-                printf("cycle %f | IF %ld ID %ld EX %ld MEM %ld WB %ld retired %d\n",
-    cycle_clock,
-    IF_stage.size(),
-    ID_stage.size(),
-    EX_stage.size(),
-    MEM_stage.size(),
-    WB_stage.size(),
-    num_retired_instructions);
                 cycle_clock += 1;
                 WritebackResultsAndRetire();
                 MemoryAccess(true);
