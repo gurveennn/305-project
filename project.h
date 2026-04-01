@@ -17,7 +17,7 @@
 #include <queue>
 #ifndef PROJECT_H_
 #define PROJECT_H_
-#define MAX_SIZE 20000 
+#define MAX_SIZE 20000
 
 // Definition of a Queue Node including arrival and service time
 struct Instruction {
@@ -33,6 +33,7 @@ struct Instruction {
 
 };
 
+// main simulations class 
 class Simulation {
 	public:
 		Simulation(std::string trace_file_name_in, double start_inst_in, double inst_count_in, double D_in) {
@@ -86,15 +87,35 @@ class Simulation {
 		bool ValidateStructuralHazards(std::vector<Instruction*> cur_stage);
 		bool CheckDataHazard(Instruction* current_inst);
 		Instruction* LatestPC(Instruction* current_inst, const std::string& dependencies_pc);
-		void InstructionFetch(int num_to_fetch);
+		void InstructionFetch();
+
 		void InstructionDecodeAndReadOperands();
-		void InstructionIssueAndExecute(bool all_cycles_completed);
-		void MemoryAccess(bool all_cycles_completed);
+		void InstructionIssueAndExecute();
+		void MemoryAccess();
 		void WritebackResultsAndRetire();
 		void RunSimulation();
 
+		// get the fequency based on the depth D
+		double get_frequency() {
+			if (D == 1) {
+				return 1.0;
+
+			} else if (D == 2) {
+				return 1.2;
+
+			} else if (D == 3) {
+				return 1.7;
+
+			} else if (D == 4) {
+				return 1.8;
+			}
+
+			return 1.0; 
+		}
+
 		// This function should be called to print periodic and/or end-of-simulation statistics
 		void PrintStatistics(double lambda) {
+			printf("\n---Simulation Results---\n");
 			simulated_stats[0] = (num_integer_instructions / inst_count) * 100;  // simulated mean number
 			simulated_stats[1] = (num_float_instructions / inst_count) * 100;  // simulated mean response time
 			simulated_stats[2] = (num_branch_instructions / inst_count) * 100;  // simulated mean waiting time for evaluation
@@ -107,16 +128,19 @@ class Simulation {
 			num_load_instructions +
 			num_store_instructions;
 
+		// get the frequency and compute the executiion time 
+		double freq_ghz = get_frequency();
+		double exec_time = cycle_clock / (freq_ghz * 1e6);
+
 		printf("Total retired = %d\n", total);
-		printf("Expected = %f\n", inst_count);		
+		printf("Execution time = %.6f\n", exec_time);	
+		printf("Number of cycles completed = %f\n\n", cycle_clock);
 
-
-			printf("number of cycles completed %f\n", cycle_clock);
-			printf("percentage integer instructions = %f\n", simulated_stats[0]);
-			printf("percentage float instructions  = %f\n",simulated_stats[1]); 
-			printf("percentage branch instructions = %f\n", simulated_stats[2]);
-			printf("percentage load instructions= %f\n", simulated_stats[3]);
-			printf("percentage storage instructions  = %f\n", simulated_stats[4]);
+		printf("Percentage integer instructions = %f\n", simulated_stats[0]);
+		printf("Percentage float instructions  = %f\n",simulated_stats[1]); 
+		printf("Percentage branch instructions = %f\n", simulated_stats[2]);
+		printf("Percentage load instructions = %f\n", simulated_stats[3]);
+		printf("Percentage storage instructions  = %f\n", simulated_stats[4]);
 
 		};
 	private:
