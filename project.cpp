@@ -167,8 +167,12 @@ void Simulation::InstructionIssueAndExecute(){
                                 } 
 
                                 MEM_stage.push_back(inst);
-                                if (inst->instruction_type == 4) mem_contains_load = true;
-                                if (inst->instruction_type == 5) mem_contains_store = true;
+                                if (inst->instruction_type == 4) {
+                                        mem_contains_load = true;
+                                }
+                                if (inst->instruction_type == 5) {
+                                        mem_contains_store = true;
+                                }
                         }
                 } else {
                         inst->num_EX_stages_remaining -= 1;
