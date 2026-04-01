@@ -82,10 +82,10 @@ class Simulation {
 
 		void ReadTrace(std::string filename);
 		bool ValidateStructuralHazards(std::vector<Instruction*> cur_stage);
-		void InstructionFetch(int num_to_fetch);
+		void InstructionFetch();
 		void InstructionDecodeAndReadOperands();
-		void InstructionIssueAndExecute(bool all_cycles_completed);
-		void MemoryAccess(bool all_cycles_completed);
+		void InstructionIssueAndExecute();
+		void MemoryAccess();
 		void WritebackResultsAndRetire();
 		void RunSimulation();
 
