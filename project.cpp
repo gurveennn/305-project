@@ -97,15 +97,11 @@ bool Simulation::ValidateStructuralHazards(std::vector<Instruction*> cur_stage) 
         return true;
 }
 
-void Simulation::InstructionFetch(int num_to_fetch) {
-    // Retrieve 2 instructions from the queue where they are stored, they are currently in IF stage
+void Simulation::InstructionFetch() {
       while (IF_stage.size() < 2 && !instructions_queue.empty()) {
         IF_stage.push_back(instructions_queue.front());
         instructions_queue.pop();
     }
-
-    // Step 2: move from IF into ID (up to 2 total in ID)
-    // Only move if ID has room — stall otherwise
     while (!IF_stage.empty() && ID_stage.size() < 2) {
         ID_stage.push_back(IF_stage.front());
         IF_stage.erase(IF_stage.begin());
@@ -118,7 +114,7 @@ void Simulation::InstructionDecodeAndReadOperands(){
     if (ValidateStructuralHazards(ID_stage)) {
         count = std::ranges::min(2, (int)ID_stage.size());
     } else {
-        count = 1; // structural hazard: only issue one
+        count = 1;
     }
                 for (int i = 0; i < count; i++) {
                 Instruction* cur_instruction = ID_stage[i];
@@ -129,10 +125,11 @@ void Simulation::InstructionDecodeAndReadOperands(){
                 }
        
         ID_stage.erase(ID_stage.begin(), ID_stage.begin() + count);
-        //printf("size of ID after erase %ld\n", ID_stage.size());
 
-}     
-void Simulation::InstructionIssueAndExecute(bool all_cycles_completed){
+}    
+
+
+void Simulation::InstructionIssueAndExecute(){
            if (EX_stage.empty()){
 
             return;
@@ -153,15 +150,25 @@ void Simulation::InstructionIssueAndExecute(bool all_cycles_completed){
         }
         for (auto inst : EX_stage) {
                 if (inst->num_EX_stages_remaining <= 1) {
-                        if ((inst->instruction_type == 4 && mem_contains_load)  || (inst->instruction_type == 5 && mem_contains_store) || MEM_stage.size() >= 2 ) {
+                        /*if ((CheckIFMEMContainsLoad(inst))  || (CheckIFMEMContainsStorage(inst)) || MEM_stage.size() >= 2 ) {
                                next_EX.push_back(inst);
  
+                        }*/
+                        bool blocked = (inst->instruction_type == 4 && mem_contains_load)
+                                || (inst->instruction_type == 5 && mem_contains_store)
+                                || MEM_stage.size() >= 2;
+
+                        if (blocked) {
+                        next_EX.push_back(inst);
                         }
                         else {
                                 if (inst->instruction_type == 3) {
                                         halt_instruction_fetch = false; 
                                 } 
+
                                 MEM_stage.push_back(inst);
+                                if (inst->instruction_type == 4) mem_contains_load = true;
+                                if (inst->instruction_type == 5) mem_contains_store = true;
                         }
                 } else {
                         inst->num_EX_stages_remaining -= 1;
@@ -179,7 +186,7 @@ void Simulation::InstructionIssueAndExecute(bool all_cycles_completed){
 // Should schedule a start service event if the server is idle
 // *arriving_patient points to priority queue patient that arrived
 
-void Simulation::MemoryAccess(bool all_cycles_completed){
+void Simulation::MemoryAccess(){
         std::vector<Instruction*> next_MEM;
         std::vector<Instruction*> to_WB;
         for (auto inst : MEM_stage) {
@@ -270,10 +277,12 @@ void Simulation::RunSimulation(){
     num_retired_instructions);
                 cycle_clock += 1;
                 WritebackResultsAndRetire();
-                MemoryAccess(true);
-                InstructionIssueAndExecute(true);
+                MemoryAccess();
+                InstructionIssueAndExecute();
                 InstructionDecodeAndReadOperands();
-                InstructionFetch(2);
+                if (!halt_instruction_fetch) {
+                        InstructionFetch();
+                }
 
 
         }
