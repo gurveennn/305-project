@@ -228,7 +228,7 @@ void Simulation::InstructionDecodeAndReadOperands(){
        
         ID_stage.erase(ID_stage.begin(), ID_stage.begin() + count);
 }
-}     
+
 
 
 void Simulation::InstructionIssueAndExecute(){
