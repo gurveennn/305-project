@@ -116,31 +116,33 @@ class Simulation {
 		// This function should be called to print periodic and/or end-of-simulation statistics
 		void PrintStatistics(double lambda) {
 			printf("\n---Simulation Results---\n");
-			simulated_stats[0] = (num_integer_instructions / inst_count) * 100;  // simulated mean number
-			simulated_stats[1] = (num_float_instructions / inst_count) * 100;  // simulated mean response time
-			simulated_stats[2] = (num_branch_instructions / inst_count) * 100;  // simulated mean waiting time for evaluation
-			simulated_stats[3] = (num_load_instructions / inst_count) * 100;  // simulated mean waiting time for treatment
-			simulated_stats[4] = (num_store_instructions / inst_count) * 100;  // simulated clean time
-		int total =
+
+			int total =
 			num_integer_instructions +
 			num_float_instructions +
 			num_branch_instructions +
 			num_load_instructions +
 			num_store_instructions;
 
-		// get the frequency and compute the executiion time 
-		double freq_ghz = get_frequency();
-		double exec_time = cycle_clock / (freq_ghz * 1e6);
+			simulated_stats[0] = (num_integer_instructions / (double)total) * 100;  // simulated mean number
+			simulated_stats[1] = (num_float_instructions / (double)total) * 100;  // simulated mean response time
+			simulated_stats[2] = (num_branch_instructions / (double)total) * 100;  // simulated mean waiting time for evaluation
+			simulated_stats[3] = (num_load_instructions / (double)total) * 100;  // simulated mean waiting time for treatment
+			simulated_stats[4] = (num_store_instructions / (double)total) * 100;  // simulated clean time
+		
+			// get the frequency and compute the executiion time 
+			double freq_ghz = get_frequency();
+			double exec_time = cycle_clock / (freq_ghz * 1e6);
 
-		printf("Total retired = %d\n", total);
-		printf("Execution time = %.6f\n", exec_time);	
-		printf("Number of cycles completed = %f\n\n", cycle_clock);
+			printf("Total retired = %d\n", total);
+			printf("Execution time = %.6f\n", exec_time);	
+			printf("Number of cycles completed = %f\n\n", cycle_clock);
 
-		printf("Percentage integer instructions = %f\n", simulated_stats[0]);
-		printf("Percentage float instructions  = %f\n",simulated_stats[1]); 
-		printf("Percentage branch instructions = %f\n", simulated_stats[2]);
-		printf("Percentage load instructions = %f\n", simulated_stats[3]);
-		printf("Percentage storage instructions  = %f\n", simulated_stats[4]);
+			printf("Percentage integer instructions = %f\n", simulated_stats[0]);
+			printf("Percentage float instructions  = %f\n",simulated_stats[1]); 
+			printf("Percentage branch instructions = %f\n", simulated_stats[2]);
+			printf("Percentage load instructions = %f\n", simulated_stats[3]);
+			printf("Percentage storage instructions  = %f\n", simulated_stats[4]);
 
 		};
 	private:
