@@ -98,12 +98,16 @@ bool Simulation::ValidateStructuralHazards(std::vector<Instruction*> cur_stage) 
         return true;
 }
 
+//Find the most recent instruction with the same dependency
+//I have taken help from ChatGPT to implement this function. I was confused about how to keep trach of the sequence number and it helped me with this part.
 Instruction* Simulation::LatestPC(Instruction* current_inst, const std::string& dependencies_pc){
         Instruction* latest = nullptr; 
+        //IF Stage
         for (Instruction* inst : IF_stage){
                 if(inst==nullptr){
                         continue;
                 }
+                //Check if the instruction has the same PC as the dependency and was before the current instruction
                 else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
                         if (latest==nullptr || inst->seq_num>latest->seq_num){
                                 latest=inst;
@@ -111,10 +115,12 @@ Instruction* Simulation::LatestPC(Instruction* current_inst, const std::string& 
 
                 }
         }
+        //ID Stage
         for (Instruction* inst : ID_stage){
                 if(inst==nullptr){
                         continue;
                 }
+                //Check if the instruction has the same PC as the dependency and was before the current instruction
                 else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
                         if (latest==nullptr || inst->seq_num>latest->seq_num){
                                 latest=inst;
@@ -122,10 +128,12 @@ Instruction* Simulation::LatestPC(Instruction* current_inst, const std::string& 
 
                 }
         }
+        //EX Stage
         for (Instruction* inst : EX_stage){
                 if(inst==nullptr){
                         continue;
                 }
+                //Check if the instruction has the same PC as the dependency and was before the current instruction
                 else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
                         if (latest==nullptr || inst->seq_num>latest->seq_num){
                                 latest=inst;
@@ -133,10 +141,12 @@ Instruction* Simulation::LatestPC(Instruction* current_inst, const std::string& 
 
                 }
         }
+        //MEM Stage
         for (Instruction* inst : MEM_stage){
                 if(inst==nullptr){
                         continue;
                 }
+                //Check if the instruction has the same PC as the dependency and was before the current instruction
                 else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
                         if (latest==nullptr || inst->seq_num>latest->seq_num){
                                 latest=inst;
@@ -144,10 +154,12 @@ Instruction* Simulation::LatestPC(Instruction* current_inst, const std::string& 
 
                 }
         }
+        //WB Stage
         for (Instruction* inst : WB_stage){
                 if(inst==nullptr){
                         continue;
                 }
+                //Check if the instruction has the same PC as the dependency and was before the current instruction
                 else if(inst->instruction_pc==dependencies_pc && inst->seq_num<current_inst->seq_num){
                         if (latest==nullptr || inst->seq_num>latest->seq_num){
                                 latest=inst;
@@ -169,19 +181,22 @@ Instruction* Simulation::LatestPC(Instruction* current_inst, const std::string& 
         return latest;
 }
 
+//Check if the data dependencies have been satisfied. 
 bool Simulation::CheckDataHazard(Instruction* current_inst){
         for (const std::string& dependencies_pc: current_inst->dependencies){
+                //most recent instruction with the same dependency
                 Instruction* latest = LatestPC(current_inst,dependencies_pc);
                 if(latest==nullptr){
                         continue;
                 }
-
+                //Check if the instruction is an integer or floating point type and if the data dependency has been satisfied. after EX stage. If not set it to false.
                 if(latest->instruction_type == 1 || latest->instruction_type == 2){
                         if (!latest->ex_done){
                                 return false;
                         }
 
                 }
+                //Check if the instruction is load or store type and if the data dependency has been satisfied. after MEM stage. If not set it to false.
                 if(latest->instruction_type == 4 || latest->instruction_type == 5){
                         if (!latest->mem_done){
                                 return false;
@@ -216,7 +231,9 @@ void Simulation::InstructionDecodeAndReadOperands(){
     }
                 for (int i = 0; i < count; i++) {
                 Instruction* cur_instruction = ID_stage[i];
+                //Check data hazard and if it has not been satisfied instruction cannot go to EX stage.
                 if(!CheckDataHazard(cur_instruction)){
+                        //Break out of the loop if data hazard is not satisfied. 
                         count=i;
                         break;
                 }
