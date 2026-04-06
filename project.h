@@ -17,11 +17,11 @@
 #include <queue>
 #ifndef PROJECT_H_
 #define PROJECT_H_
-#define MAX_SIZE 20000
 
-// Definition of a Queue Node including arrival and service time
+// Definition of Instruction struct
 struct Instruction {
-    double arrival_time;  // customer arrival time, measured from time t=0, inter-arrival times exponential
+	// Contains information about instruction type, its PC, any PC dependencies, number of EX and MEM stages remaining
+	// if ex and mem instructions are completed and sequence of numbers
 	int instruction_type;
 	std::string instruction_pc;
 	std::vector<std::string> dependencies;
@@ -41,20 +41,6 @@ class Simulation {
         	start_inst = start_inst_in;
             inst_count = inst_count_in;
             D = D_in;
-
-			// std::queue<Instruction*> traced_instructions;
-			// std::vector<Instruction*> IF_stage;
-			// std::vector<Instruction*> ID_stage;
-			// std::vector<Instruction*> EX_stage;
-			// std::vector<Instruction*> MEM_stage;
-			// std::vector<Instruction*> WB_stage;
-
-
-			//ElementQ = new ElementQueue(seed, lambda, mu_e, mu_t, mu_c);
-			//E = new EventQueue();
-			
-			//P = new EventQueue();
-			//C = new EventQueue();
 			halt_instruction_fetch = false;
 			num_integer_instructions = 0;
 	 		num_float_instructions = 0;
@@ -76,19 +62,13 @@ class Simulation {
 			simulated_stats[4] = 0;	
 		};
 		~Simulation() {
-			//delete ElementQ;
-		//	delete E;
-			//delete P;
-			//delete C;
 		};
 
 		void ReadTrace(std::string filename);
-		
 		bool ValidateStructuralHazards(std::vector<Instruction*> cur_stage);
 		bool CheckDataHazard(Instruction* current_inst);
 		Instruction* LatestPC(Instruction* current_inst, const std::string& dependencies_pc);
 		void InstructionFetch();
-
 		void InstructionDecodeAndReadOperands();
 		void InstructionIssueAndExecute();
 		void MemoryAccess();
@@ -116,11 +96,11 @@ class Simulation {
 		// This function should be called to print periodic and/or end-of-simulation statistics
 		void PrintStatistics(double lambda) {
 			printf("\n---Simulation Results---\n");
-			simulated_stats[0] = (num_integer_instructions / inst_count) * 100;  // simulated mean number
-			simulated_stats[1] = (num_float_instructions / inst_count) * 100;  // simulated mean response time
-			simulated_stats[2] = (num_branch_instructions / inst_count) * 100;  // simulated mean waiting time for evaluation
-			simulated_stats[3] = (num_load_instructions / inst_count) * 100;  // simulated mean waiting time for treatment
-			simulated_stats[4] = (num_store_instructions / inst_count) * 100;  // simulated clean time
+			simulated_stats[0] = (num_integer_instructions / inst_count) * 100;  // percentage of total integer instructions
+			simulated_stats[1] = (num_float_instructions / inst_count) * 100;  // percentage of total floating point instructions
+			simulated_stats[2] = (num_branch_instructions / inst_count) * 100;  // percentage of total branch instructions
+			simulated_stats[3] = (num_load_instructions / inst_count) * 100;  // percentage of total load instructions
+			simulated_stats[4] = (num_store_instructions / inst_count) * 100;  // percentage of total store instructions
 		int total =
 			num_integer_instructions +
 			num_float_instructions +
@@ -162,10 +142,6 @@ class Simulation {
 		int	num_MEM_stages_remaining;
 		int num_retired_instructions;
 		long long next_seq_num;
-		//ElementQueue* ElementQ;     // Element Queue for all elements used in simulation
-		//EventQueue* E;              // Event Queue for patients arriving to emergency dept and waiting for evaluation	
-		///EventQueue* P;              // Event Queue to model treatment process
-		//∂EventQueue* C;              // Event Queue to model cleaning process
 
 		std::queue<Instruction*> instructions_queue; //this contains just a list of instructions in order of the input file
 		std::vector<Instruction*> IF_stage;
