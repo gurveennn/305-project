@@ -65,11 +65,12 @@ void Simulation::ReadTrace(std::string filename){
                 // based on the depth configuration
                 inst->num_EX_stages_remaining = 1;
                 inst->num_MEM_stages_remaining = 1;
-                if (D == 2 || D == 4) {
+                if ((D == 2 || D == 4) && inst->instruction_type == 2) {
                         inst->num_EX_stages_remaining = 2;
+                        
                 }
                
-                if (D == 3 || D == 4) {
+                if ((D == 3 || D == 4)  && inst->instruction_type == 4) {
                         inst->num_MEM_stages_remaining = 3;
                 }
                 // Push instruction into instruction queue
