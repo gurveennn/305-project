@@ -218,7 +218,14 @@ void Simulation::InstructionFetch() {
         instructions_queue.pop();
     }
     while (!IF_stage.empty() && ID_stage.size() < 2) {
-        ID_stage.push_back(IF_stage.front());
+        Instruction* cur_instruction = IF_stage.front();
+        ID_stage.push_back(cur_instruction);
+        // If the current instruction is a branch type, it is a control hazard. 
+        // A branch instruction halts instruction fetch until the cycle after the branch executes (finishes EX stage).
+       
+        if (cur_instruction->instruction_type == 3) {
+                halt_instruction_fetch = true;
+        }
         IF_stage.erase(IF_stage.begin());
     }
 }
@@ -240,11 +247,6 @@ void Simulation::InstructionDecodeAndReadOperands(){
         if(!CheckDataHazard(cur_instruction)){
                 count=i;
                 break;
-        }
-        // If the current instruction is a branch type, it is a control hazard. 
-        // A branch instruction halts instruction fetch until the cycle after the branch executes (finishes EX stage).
-        if (cur_instruction->instruction_type == 3) {
-                halt_instruction_fetch = true;
         }
         EX_stage.push_back(cur_instruction);
      }
