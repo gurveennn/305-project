@@ -213,20 +213,21 @@ bool Simulation::CheckDataHazard(Instruction* current_inst){
 // Instruction fetch IF, first step of processor pipeline. Retrieves instruction objects stored in the instructions queue. 
 // Fetches instructions for second stage ID (Instruction decode and read operands).
 void Simulation::InstructionFetch() {
-      while (IF_stage.size() < 2 && !instructions_queue.empty()) {
-        IF_stage.push_back(instructions_queue.front());
-        instructions_queue.pop();
+    if (!halt_instruction_fetch) {
+        while (IF_stage.size() < 2 && !instructions_queue.empty()) {
+            Instruction* inst = instructions_queue.front();
+            IF_stage.push_back(inst);
+            instructions_queue.pop();
+        // If the current instruction is a branch type, it is a control hazard. 
+        // A branch instruction halts instruction fetch until the cycle after the branch executes (finishes EX stage).
+            if (inst->instruction_type == 3) {
+                halt_instruction_fetch = true;
+                break;
+            }
+        }
     }
     while (!IF_stage.empty() && ID_stage.size() < 2) {
         Instruction* cur_instruction = IF_stage.front();
-        //ID_stage.push_back(cur_instruction);
-        // If the current instruction is a branch type, it is a control hazard. 
-        // A branch instruction halts instruction fetch until the cycle after the branch executes (finishes EX stage).
-       
-        if (cur_instruction->instruction_type == 3) {
-                halt_instruction_fetch = true;
-                break;
-        }
         ID_stage.push_back(cur_instruction);
         IF_stage.erase(IF_stage.begin());
     }
@@ -389,11 +390,7 @@ void Simulation::RunSimulation(){
                 MemoryAccess();
                 InstructionIssueAndExecute();
                 InstructionDecodeAndReadOperands();
-                if (!halt_instruction_fetch) {
-                        InstructionFetch();
-                }
-
-
+                InstructionFetch();
         }
 }
 
