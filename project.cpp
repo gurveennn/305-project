@@ -219,13 +219,15 @@ void Simulation::InstructionFetch() {
     }
     while (!IF_stage.empty() && ID_stage.size() < 2) {
         Instruction* cur_instruction = IF_stage.front();
-        ID_stage.push_back(cur_instruction);
+        //ID_stage.push_back(cur_instruction);
         // If the current instruction is a branch type, it is a control hazard. 
         // A branch instruction halts instruction fetch until the cycle after the branch executes (finishes EX stage).
        
         if (cur_instruction->instruction_type == 3) {
                 halt_instruction_fetch = true;
+                break;
         }
+        ID_stage.push_back(cur_instruction);
         IF_stage.erase(IF_stage.begin());
     }
 }
